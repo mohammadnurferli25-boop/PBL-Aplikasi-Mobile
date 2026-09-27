@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   runApp(const GenangLaporApp());
@@ -44,18 +45,14 @@ class HomePage extends StatelessWidget {
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.notifications_none),
-            tooltip: 'Notifikasi',
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -107,29 +104,30 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // Laporkan Genangan
             _MenuCard(
               icon: Icons.water_drop,
               title: 'Laporkan Genangan',
-              description: 'Laporkan lokasi genangan yang Anda temukan.',
+              description:
+                  'Laporkan lokasi genangan yang Anda temukan.',
               iconColor: Colors.blue,
               onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const LaporkanGenanganPage(),
-    ),
-  );
-},
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const LaporkanGenanganPage(),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 12),
 
-            // Lihat Peta
             _MenuCard(
               icon: Icons.map,
               title: 'Lihat Peta',
-              description: 'Lihat lokasi genangan yang telah dilaporkan.',
+              description:
+                  'Lihat lokasi genangan yang telah dilaporkan.',
               iconColor: Colors.green,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -144,11 +142,11 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Laporan Masyarakat
             _MenuCard(
               icon: Icons.people,
               title: 'Laporan Masyarakat',
-              description: 'Lihat laporan genangan dari pengguna lain.',
+              description:
+                  'Lihat laporan genangan dari pengguna lain.',
               iconColor: Colors.orange,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -163,7 +161,6 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // Informasi
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -190,7 +187,8 @@ class HomePage extends StatelessWidget {
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Gunakan lokasi Anda',
@@ -201,7 +199,8 @@ class HomePage extends StatelessWidget {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          'Lokasi digunakan untuk membantu menentukan titik genangan secara lebih akurat.',
+                          'Lokasi digunakan untuk membantu '
+                          'menentukan titik genangan secara lebih akurat.',
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 13,
@@ -216,13 +215,9 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-
-      // Bottom Navigation
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
-        onDestinationSelected: (index) {
-          // Navigasi akan kita buat pada tahap berikutnya.
-        },
+        onDestinationSelected: (index) {},
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -295,12 +290,11 @@ class _MenuCard extends StatelessWidget {
                 size: 28,
               ),
             ),
-
             const SizedBox(width: 15),
-
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
@@ -320,7 +314,6 @@ class _MenuCard extends StatelessWidget {
                 ],
               ),
             ),
-
             const Icon(
               Icons.arrow_forward_ios,
               size: 16,
@@ -332,11 +325,13 @@ class _MenuCard extends StatelessWidget {
     );
   }
 }
+
 class LaporkanGenanganPage extends StatefulWidget {
   const LaporkanGenanganPage({super.key});
 
   @override
-  State<LaporkanGenanganPage> createState() => _LaporkanGenanganPageState();
+  State<LaporkanGenanganPage> createState() =>
+      _LaporkanGenanganPageState();
 }
 
 class _LaporkanGenanganPageState
@@ -348,6 +343,119 @@ class _LaporkanGenanganPageState
       TextEditingController();
 
   String tingkatGenangan = 'Sedang';
+
+  double? latitude;
+  double? longitude;
+
+  bool isLoadingLocation = false;
+
+  Future<void> getCurrentLocation() async {
+    setState(() {
+      isLoadingLocation = true;
+    });
+
+    try {
+      bool serviceEnabled =
+          await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Aktifkan lokasi/GPS di HP terlebih dahulu.',
+            ),
+          ),
+        );
+
+        setState(() {
+          isLoadingLocation = false;
+        });
+
+        return;
+      }
+
+      LocationPermission permission =
+          await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Izin lokasi ditolak.',
+            ),
+          ),
+        );
+
+        setState(() {
+          isLoadingLocation = false;
+        });
+
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Izin lokasi ditolak permanen. '
+              'Aktifkan melalui Pengaturan aplikasi.',
+            ),
+          ),
+        );
+
+        setState(() {
+          isLoadingLocation = false;
+        });
+
+        return;
+      }
+
+      const locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+      );
+
+      Position position =
+          await Geolocator.getCurrentPosition(
+        locationSettings: locationSettings,
+      );
+
+      setState(() {
+        latitude = position.latitude;
+        longitude = position.longitude;
+
+        lokasiController.text =
+            'Lat: ${position.latitude.toStringAsFixed(7)}, '
+            'Lng: ${position.longitude.toStringAsFixed(7)}';
+
+        isLoadingLocation = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingLocation = false;
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal mengambil lokasi: $e',
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -373,9 +481,9 @@ class _LaporkanGenanganPageState
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
-
             const Text(
               'Form Pelaporan',
               style: TextStyle(
@@ -407,17 +515,75 @@ class _LaporkanGenanganPageState
 
             TextField(
               controller: lokasiController,
+              readOnly: true,
               decoration: InputDecoration(
-                hintText: 'Masukkan lokasi genangan',
+                hintText:
+                    'Belum ada lokasi',
                 prefixIcon: const Icon(
                   Icons.location_on,
                   color: Colors.blue,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
               ),
             ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: isLoadingLocation
+                    ? null
+                    : getCurrentLocation,
+                icon: isLoadingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.my_location,
+                      ),
+                label: Text(
+                  isLoadingLocation
+                      ? 'Mengambil lokasi...'
+                      : 'Gunakan Lokasi Saya',
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            if (latitude != null &&
+                longitude != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius:
+                      BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.green.shade200,
+                  ),
+                ),
+                child: Text(
+                  'Lokasi berhasil diambil\n'
+                  'Latitude: ${latitude!.toStringAsFixed(7)}\n'
+                  'Longitude: ${longitude!.toStringAsFixed(7)}',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
 
             const SizedBox(height: 20),
 
@@ -432,14 +598,15 @@ class _LaporkanGenanganPageState
             const SizedBox(height: 8),
 
             DropdownButtonFormField<String>(
-              value: tingkatGenangan,
+              initialValue: tingkatGenangan,
               decoration: InputDecoration(
                 prefixIcon: const Icon(
                   Icons.water_drop,
                   color: Colors.blue,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
               ),
               items: const [
@@ -457,8 +624,10 @@ class _LaporkanGenanganPageState
                 ),
               ],
               onChanged: (value) {
+                if (value == null) return;
+
                 setState(() {
-                  tingkatGenangan = value!;
+                  tingkatGenangan = value;
                 });
               },
             ),
@@ -479,9 +648,11 @@ class _LaporkanGenanganPageState
               controller: deskripsiController,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Jelaskan kondisi genangan...',
+                hintText:
+                    'Jelaskan kondisi genangan...',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -503,13 +674,15 @@ class _LaporkanGenanganPageState
               height: 150,
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius:
+                    BorderRadius.circular(12),
                 border: Border.all(
                   color: Colors.grey.shade300,
                 ),
               ),
               child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.camera_alt_outlined,
@@ -518,7 +691,7 @@ class _LaporkanGenanganPageState
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Tambah foto',
+                    'Foto akan kita tambahkan berikutnya',
                     style: TextStyle(
                       color: Colors.grey,
                     ),
@@ -534,7 +707,8 @@ class _LaporkanGenanganPageState
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
                     const SnackBar(
                       content: Text(
                         'Laporan berhasil disiapkan.',
