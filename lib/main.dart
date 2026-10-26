@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -1211,7 +1213,8 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
   double? longitude;
 
   bool isLoadingLocation = false;
-
+final ImagePicker _picker = ImagePicker();
+XFile? _fotoGenangan;
   // ==========================================================
   // MENGAMBIL LOKASI
   // ==========================================================
@@ -1311,6 +1314,28 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
     }
   }
 
+ Future<void> _pilihFoto(ImageSource source) async {
+  try {
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      imageQuality: 80,
+    );
+
+    if (image == null || !mounted) return;
+
+    setState(() {
+      _fotoGenangan = image;
+    });
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Gagal mengambil foto: $e'),
+      ),
+    );
+  }
+}
   @override
   void dispose() {
     lokasiController.dispose();
@@ -1525,34 +1550,77 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
 
             const SizedBox(height: 8),
 
-            Container(
-              width: double.infinity,
-              height: 150,
-
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-
-                borderRadius: BorderRadius.circular(12),
-
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-
-                children: [
-                  Icon(Icons.camera_alt_outlined, size: 45, color: Colors.grey),
-
-                  SizedBox(height: 8),
-
-                  Text(
-                    'Foto akan kita tambahkan berikutnya',
-
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+           Column(
+  children: [
+    Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade300,
+        ),
+      ),
+      child: _fotoGenangan == null
+          ? const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.camera_alt_outlined,
+                  size: 45,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Belum ada foto genangan',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            )
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(_fotoGenangan!.path),
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
               ),
             ),
+    ),
+    const SizedBox(height: 12),
+    Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _pilihFoto(ImageSource.camera),
+            icon: const Icon(Icons.camera_alt),
+            label: const Text('Kamera'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _pilihFoto(ImageSource.gallery),
+            icon: const Icon(Icons.photo_library),
+            label: const Text('Galeri'),
+          ),
+        ),
+      ],
+    ),
+    if (_fotoGenangan != null)
+      TextButton.icon(
+        onPressed: () {
+          setState(() {
+            _fotoGenangan = null;
+          });
+        },
+        icon: const Icon(Icons.delete_outline),
+        label: const Text('Hapus foto'),
+      ),
+  ],
+           ),
+
 
             const SizedBox(height: 25),
 
