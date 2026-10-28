@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,11 +12,12 @@ void main() {
 // DATA AKUN SEMENTARA
 // ============================================================
 //
-// Untuk sekarang akun masih disimpan sementara di memory.
-// Nanti bagian ini bisa kita ganti dengan Firebase.
+// akun masih disimpan sementara di memory.
+// dibagian ini bisa kita ganti dengan Firebase.
 // ============================================================
 
 Map<String, String> akunUsers = {'demo@gmail.com': '12345678'};
+String? emailPenggunaAktif;
 
 // ============================================================
 // APLIKASI UTAMA
@@ -59,7 +61,236 @@ class GenangLaporApp extends StatelessWidget {
       ),
 
       // Halaman pertama yang dibuka
-      home: const LoginPage(),
+      home: const WelcomePage(),
+    );
+  }
+}
+
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F8FC),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 25),
+
+              // Logo aplikasi
+              const Icon(
+                Icons.water_drop_rounded,
+                size: 75,
+                color: Colors.blue,
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'GenangLapor',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'Peduli Genangan, Selamat di Perjalanan',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+
+              const SizedBox(height: 35),
+
+              // Sambutan utama
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.location_searching,
+                      color: Colors.white,
+                      size: 42,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Kenali Genangan, '
+                      'Hindari Risiko!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 27,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Bantu masyarakat mengetahui titik '
+                      'genangan dan berbagi informasi kondisi '
+                      'jalan di sekitar Anda.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              const Text(
+                'Satu aplikasi, banyak manfaat',
+                style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 16),
+
+              _WelcomeFeature(
+                icon: Icons.map_outlined,
+                title: 'Lihat Peta',
+                description: 'Kenali lokasi titik genangan.',
+              ),
+
+              _WelcomeFeature(
+                icon: Icons.camera_alt_outlined,
+                title: 'Laporkan Genangan',
+                description: 'Bagikan foto dan kondisi genangan.',
+              ),
+
+              _WelcomeFeature(
+                icon: Icons.people_outline,
+                title: 'Laporan Masyarakat',
+                description: 'Dapatkan informasi dari warga.',
+              ),
+
+              const SizedBox(height: 25),
+
+              // Tombol masuk
+              SizedBox(
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Masuk',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterPage(),
+                    ),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  foregroundColor: Colors.blue,
+                  side: const BorderSide(color: Colors.blue),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('Buat Akun Baru'),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Bersama kita peduli lingkungan sekitar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Komponen ringkasan fitur di halaman welcome
+class _WelcomeFeature extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _WelcomeFeature({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.blue),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -107,6 +338,7 @@ class _LoginPageState extends State<LoginPage> {
     String password = passwordController.text;
 
     if (akunUsers.containsKey(email) && akunUsers[email] == password) {
+      emailPenggunaAktif = email;
       if (!mounted) return;
 
       setState(() {
@@ -1070,7 +1302,17 @@ class HomePage extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
 
-        onDestinationSelected: (index) {},
+        onDestinationSelected: (index) {
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ProfilPage(email: emailPenggunaAktif ?? 'demo@gmail.com'),
+              ),
+            );
+          }
+        },
 
         destinations: const [
           NavigationDestination(
@@ -1191,6 +1433,155 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
+class ProfilPage extends StatelessWidget {
+  final String email;
+
+  const ProfilPage({super.key, required this.email});
+
+  @override
+  Widget build(BuildContext context) {
+    final String nama = email.split('@').first;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Profil Saya',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 15),
+
+            // Avatar pengguna
+            const CircleAvatar(
+              radius: 55,
+              backgroundColor: Color(0xFFDCEBFF),
+              child: Icon(Icons.person, size: 65, color: Colors.blue),
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              nama,
+              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(email, style: const TextStyle(color: Colors.grey)),
+
+            const SizedBox(height: 30),
+
+            // Informasi akun
+            Card(
+              color: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.person_outline,
+                      color: Colors.blue,
+                    ),
+                    title: const Text('Nama Pengguna'),
+                    subtitle: Text(nama),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.email_outlined,
+                      color: Colors.blue,
+                    ),
+                    title: const Text('Email'),
+                    subtitle: Text(email),
+                  ),
+                  const Divider(height: 1),
+                  const ListTile(
+                    leading: Icon(
+                      Icons.verified_user_outlined,
+                      color: Colors.blue,
+                    ),
+                    title: Text('Status Akun'),
+                    subtitle: Text('Pengguna GenangLapor'),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // Tombol logout
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final bool? keluar = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('Keluar dari akun?'),
+                      content: const Text(
+                        'Apakah kamu yakin ingin keluar '
+                        'dari GenangLapor?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext, false);
+                          },
+                          child: const Text('Batal'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext, true);
+                          },
+                          child: const Text('Keluar'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (keluar == true && context.mounted) {
+                    emailPenggunaAktif = null;
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const WelcomePage(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                },
+                icon: const Icon(Icons.logout, color: Colors.red),
+                label: const Text(
+                  'Keluar dari Akun',
+                  style: TextStyle(color: Colors.red),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ============================================================
 // HALAMAN LAPORKAN GENANGAN
 // ============================================================
@@ -1213,8 +1604,8 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
   double? longitude;
 
   bool isLoadingLocation = false;
-final ImagePicker _picker = ImagePicker();
-XFile? _fotoGenangan;
+  final ImagePicker _picker = ImagePicker();
+  XFile? _fotoGenangan;
   // ==========================================================
   // MENGAMBIL LOKASI
   // ==========================================================
@@ -1314,28 +1705,26 @@ XFile? _fotoGenangan;
     }
   }
 
- Future<void> _pilihFoto(ImageSource source) async {
-  try {
-    final XFile? image = await _picker.pickImage(
-      source: source,
-      imageQuality: 80,
-    );
+  Future<void> _pilihFoto(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 80,
+      );
 
-    if (image == null || !mounted) return;
+      if (image == null || !mounted) return;
 
-    setState(() {
-      _fotoGenangan = image;
-    });
-  } catch (e) {
-    if (!mounted) return;
+      setState(() {
+        _fotoGenangan = image;
+      });
+    } catch (e) {
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal mengambil foto: $e'),
-      ),
-    );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal mengambil foto: $e')));
+    }
   }
-}
+
   @override
   void dispose() {
     lokasiController.dispose();
@@ -1550,77 +1939,74 @@ XFile? _fotoGenangan;
 
             const SizedBox(height: 8),
 
-           Column(
-  children: [
-    Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.shade300,
-        ),
-      ),
-      child: _fotoGenangan == null
-          ? const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column(
               children: [
-                Icon(
-                  Icons.camera_alt_outlined,
-                  size: 45,
-                  color: Colors.grey,
+                Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: _fotoGenangan == null
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              size: 45,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Belum ada foto genangan',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_fotoGenangan!.path),
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Belum ada foto genangan',
-                  style: TextStyle(color: Colors.grey),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pilihFoto(ImageSource.camera),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Kamera'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pilihFoto(ImageSource.gallery),
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Galeri'),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_fotoGenangan != null)
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _fotoGenangan = null;
+                      });
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Hapus foto'),
+                  ),
               ],
-            )
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(_fotoGenangan!.path),
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-              ),
             ),
-    ),
-    const SizedBox(height: 12),
-    Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _pilihFoto(ImageSource.camera),
-            icon: const Icon(Icons.camera_alt),
-            label: const Text('Kamera'),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _pilihFoto(ImageSource.gallery),
-            icon: const Icon(Icons.photo_library),
-            label: const Text('Galeri'),
-          ),
-        ),
-      ],
-    ),
-    if (_fotoGenangan != null)
-      TextButton.icon(
-        onPressed: () {
-          setState(() {
-            _fotoGenangan = null;
-          });
-        },
-        icon: const Icon(Icons.delete_outline),
-        label: const Text('Hapus foto'),
-      ),
-  ],
-           ),
-
 
             const SizedBox(height: 25),
 
