@@ -24,7 +24,7 @@ Map<String, String> akunUsers = {
 };
 
 Map<String, String> roleUsers = {
-  'demo@gmail.com': '12345678',
+  'demo@gmail.com': 'masyarakat',
   'admin@genanglapor.com': 'admin',
 };
 
