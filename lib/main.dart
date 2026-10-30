@@ -18,8 +18,18 @@ void main() {
 // dibagian ini bisa kita ganti dengan Firebase.
 // ============================================================
 
-Map<String, String> akunUsers = {'demo@gmail.com': '12345678'};
+Map<String, String> akunUsers = {
+  'demo@gmail.com': '12345678',
+  'admin@genanglapor.com': 'Admin123',
+};
+
+Map<String, String> roleUsers = {
+  'demo@gmail.com': '12345678',
+  'admin@genanglapor.com': 'admin',
+};
+
 String? emailPenggunaAktif;
+String? rolePenggunaAktif;
 
 // ============================================================
 // APLIKASI UTAMA
@@ -341,6 +351,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (akunUsers.containsKey(email) && akunUsers[email] == password) {
       emailPenggunaAktif = email;
+      rolePenggunaAktif = roleUsers[email] ?? 'masyarakat';
       if (!mounted) return;
 
       setState(() {
@@ -788,6 +799,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // Simpan akun
     akunUsers[email] = password;
+    roleUsers[email] = 'masyarakat';
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -1213,21 +1225,21 @@ class HomePage extends StatelessWidget {
 
             // LAPORAN MASYARAKAT
             _MenuCard(
-  icon: Icons.people,
-  title: 'Laporan Masyarakat',
-  description: 'Lihat laporan genangan dari pengguna lain.',
-  iconColor: Colors.orange,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DaftarLaporanPage(),
-      ),
-    );
-  },
-),
+              icon: Icons.people,
+              title: 'Laporan Masyarakat',
+              description: 'Lihat laporan genangan dari pengguna lain.',
+              iconColor: Colors.orange,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DaftarLaporanPage(),
+                  ),
+                );
+              },
+            ),
 
-const SizedBox(height: 25),
+            const SizedBox(height: 25),
 
             // =================================================
             // LOKASI
@@ -1549,6 +1561,7 @@ class ProfilPage extends StatelessWidget {
 
                   if (keluar == true && context.mounted) {
                     emailPenggunaAktif = null;
+                    rolePenggunaAktif = null;
 
                     Navigator.pushAndRemoveUntil(
                       context,
@@ -1723,7 +1736,6 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
     }
   }
 
-
   // ==========================================================
   // MENGIRIM LAPORAN KE API LARAVEL
   // ==========================================================
@@ -1741,9 +1753,7 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
 
     if (lokasiController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lokasi laporan belum tersedia.'),
-        ),
+        const SnackBar(content: Text('Lokasi laporan belum tersedia.')),
       );
       return;
     }
@@ -1769,10 +1779,7 @@ class _LaporkanGenanganPageState extends State<LaporkanGenanganPage> {
 
       if (_fotoGenangan != null) {
         request.files.add(
-          await http.MultipartFile.fromPath(
-            'foto',
-            _fotoGenangan!.path,
-          ),
+          await http.MultipartFile.fromPath('foto', _fotoGenangan!.path),
         );
       }
 
@@ -2202,10 +2209,7 @@ class _DaftarLaporanPageState extends State<DaftarLaporanPage> {
 
     try {
       final response = await http
-          .get(
-            Uri.parse(apiUrl),
-            headers: {'Accept': 'application/json'},
-          )
+          .get(Uri.parse(apiUrl), headers: {'Accept': 'application/json'})
           .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
@@ -2213,8 +2217,7 @@ class _DaftarLaporanPageState extends State<DaftarLaporanPage> {
 
         if (hasil is Map && hasil['data'] is List) {
           setState(() {
-            daftarLaporan =
-                List<Map<String, dynamic>>.from(hasil['data']);
+            daftarLaporan = List<Map<String, dynamic>>.from(hasil['data']);
             isLoading = false;
           });
         } else {
@@ -2269,196 +2272,159 @@ class _DaftarLaporanPageState extends State<DaftarLaporanPage> {
       ),
 
       body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_off, size: 55, color: Colors.grey),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Gagal mengambil data laporan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(errorMessage!, textAlign: TextAlign.center),
+                    const SizedBox(height: 15),
+                    ElevatedButton.icon(
+                      onPressed: ambilLaporan,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : daftarLaporan.isEmpty
+          ? RefreshIndicator(
+              onRefresh: ambilLaporan,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 150),
+                  Icon(Icons.inbox_outlined, size: 65, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Center(child: Text('Belum ada laporan genangan.')),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: ambilLaporan,
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: daftarLaporan.length,
+                itemBuilder: (context, index) {
+                  final laporan = daftarLaporan[index];
+
+                  final foto = alamatFoto(laporan['foto']);
+                  final status = laporan['status']?.toString() ?? 'menunggu';
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    clipBehavior: Clip.antiAlias,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.cloud_off,
-                          size: 55,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Gagal mengambil data laporan',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        if (foto != null)
+                          Image.network(
+                            foto,
+                            width: double.infinity,
+                            height: 190,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 150,
+                                color: Colors.grey.shade100,
+                                alignment: Alignment.center,
+                                child: const Text('Foto tidak dapat dimuat'),
+                              );
+                            },
+                          )
+                        else
+                          Container(
+                            height: 120,
+                            width: double.infinity,
+                            color: Colors.grey.shade100,
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.water_drop_outlined,
+                              size: 45,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          errorMessage!,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 15),
-                        ElevatedButton.icon(
-                          onPressed: ambilLaporan,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Coba Lagi'),
+
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Laporan #${laporan['id'] ?? '-'}',
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text('Lokasi: ${laporan['lokasi'] ?? '-'}'),
+
+                              const SizedBox(height: 6),
+
+                              Text('Latitude: ${laporan['latitude'] ?? '-'}'),
+
+                              Text('Longitude: ${laporan['longitude'] ?? '-'}'),
+
+                              const SizedBox(height: 8),
+
+                              Text(
+                                'Tingkat Genangan: ${laporan['tingkat_genangan'] ?? '-'}',
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              Text('Deskripsi: ${laporan['deskripsi'] ?? '-'}'),
+
+                              const SizedBox(height: 12),
+
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Status: $status',
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                )
-              : daftarLaporan.isEmpty
-                  ? RefreshIndicator(
-                      onRefresh: ambilLaporan,
-                      child: ListView(
-                        physics:
-                            const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 150),
-                          Icon(
-                            Icons.inbox_outlined,
-                            size: 65,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 12),
-                          Center(
-                            child: Text(
-                              'Belum ada laporan genangan.',
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: ambilLaporan,
-                      child: ListView.builder(
-                        physics:
-                            const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
-                        itemCount: daftarLaporan.length,
-                        itemBuilder: (context, index) {
-                          final laporan = daftarLaporan[index];
-
-                          final foto = alamatFoto(laporan['foto']);
-                          final status =
-                              laporan['status']?.toString() ??
-                                  'menunggu';
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            clipBehavior: Clip.antiAlias,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                if (foto != null)
-                                  Image.network(
-                                    foto,
-                                    width: double.infinity,
-                                    height: 190,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) {
-                                      return Container(
-                                        height: 150,
-                                        color: Colors.grey.shade100,
-                                        alignment: Alignment.center,
-                                        child: const Text(
-                                          'Foto tidak dapat dimuat',
-                                        ),
-                                      );
-                                    },
-                                  )
-                                else
-                                  Container(
-                                    height: 120,
-                                    width: double.infinity,
-                                    color: Colors.grey.shade100,
-                                    alignment: Alignment.center,
-                                    child: const Icon(
-                                      Icons.water_drop_outlined,
-                                      size: 45,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Laporan #${laporan['id'] ?? '-'}',
-                                        style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 10),
-
-                                      Text(
-                                        'Lokasi: ${laporan['lokasi'] ?? '-'}',
-                                      ),
-
-                                      const SizedBox(height: 6),
-
-                                      Text(
-                                        'Latitude: ${laporan['latitude'] ?? '-'}',
-                                      ),
-
-                                      Text(
-                                        'Longitude: ${laporan['longitude'] ?? '-'}',
-                                      ),
-
-                                      const SizedBox(height: 8),
-
-                                      Text(
-                                        'Tingkat Genangan: ${laporan['tingkat_genangan'] ?? '-'}',
-                                      ),
-
-                                      const SizedBox(height: 8),
-
-                                      Text(
-                                        'Deskripsi: ${laporan['deskripsi'] ?? '-'}',
-                                      ),
-
-                                      const SizedBox(height: 12),
-
-                                      Container(
-                                        padding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 7,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          'Status: $status',
-                                          style: const TextStyle(
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
