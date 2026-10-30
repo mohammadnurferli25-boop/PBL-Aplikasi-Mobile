@@ -19,33 +19,33 @@ class LaporanController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'lokasi' => 'required|string|max:255',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'tingkat_genangan' => 'required|in:Rendah,Sedang,Tinggi',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|string|max:255',
-        ]);
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'lokasi' => 'required|string|max:255',
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'tingkat_genangan' => 'required|in:Rendah,Sedang,Tinggi',
+        'deskripsi' => 'nullable|string|max:2000',
+        'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+    ]);
 
-        $laporan = Laporan::create([
-            'lokasi' => $validated['lokasi'],
-            'latitude' => $validated['latitude'],
-            'longitude' => $validated['longitude'],
-            'tingkat_genangan' => $validated['tingkat_genangan'],
-            'deskripsi' => $validated['deskripsi'] ?? null,
-            'foto' => $validated['foto'] ?? null,
-            'status' => 'menunggu',
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan berhasil disimpan.',
-            'data' => $laporan,
-        ], 201);
+    if ($request->hasFile('foto')) {
+        $validated['foto'] = $request->file('foto')
+            ->store('laporan', 'public');
     }
+
+    $validated['status'] = 'menunggu';
+
+    $laporan = Laporan::create($validated);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Laporan berhasil disimpan.',
+        'data' => $laporan,
+    ], 201);
+}
+
 
     public function show(Laporan $laporan)
     {
